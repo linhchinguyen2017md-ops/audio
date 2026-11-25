@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Trình Đọc Audio (Mặc định 0.6x)</title>
+  <title>Trình Đọc Audio & Luyện Thi (Mặc định 0.6x)</title>
   <style>
     :root {
       --bg: #0f172a;
@@ -13,6 +13,9 @@
       --muted: #94a3b8;
       --accent: #38bdf8;
       --accent-hover: #0284c7;
+      --exam: #f59e0b;
+      --exam-bg: rgba(245, 158, 11, 0.12);
+      --danger: #ef4444;
       --border: #334155;
     }
 
@@ -34,7 +37,7 @@
 
     .container {
       width: 100%;
-      max-width: 680px;
+      max-width: 720px;
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 16px;
@@ -47,6 +50,8 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
       margin-bottom: 20px;
       padding-bottom: 16px;
       border-bottom: 1px solid var(--border);
@@ -57,15 +62,150 @@
       font-weight: 700;
     }
 
-    .badge {
-      background: rgba(56, 189, 248, 0.15);
-      color: var(--accent);
-      padding: 4px 10px;
-      border-radius: 999px;
+    .mode-switch {
+      display: flex;
+      background: #0f172a;
+      padding: 4px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+
+    .mode-switch button {
+      border: none;
+      background: transparent;
+      padding: 6px 14px;
       font-size: 0.85rem;
+      border-radius: 7px;
+      color: var(--muted);
+    }
+
+    .mode-switch button.active-normal {
+      background: var(--accent);
+      color: #0f172a;
+    }
+
+    .mode-switch button.active-exam {
+      background: var(--exam);
+      color: #0f172a;
+    }
+
+    /* Khung Chức Năng Thi */
+    .exam-panel {
+      display: none;
+      background: var(--exam-bg);
+      border: 1px solid var(--exam);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+
+    .exam-panel.visible {
+      display: block;
+    }
+
+    .exam-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .exam-title {
+      color: var(--exam);
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .exam-timer {
+      font-family: monospace;
+      font-size: 1.2rem;
+      font-weight: 700;
+      background: #0f172a;
+      color: var(--exam);
+      padding: 4px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--exam);
+    }
+
+    .exam-timer.warning {
+      color: var(--danger);
+      border-color: var(--danger);
+    }
+
+    .exam-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .exam-field {
+      background: #0f172a;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font-size: 0.85rem;
+    }
+
+    .exam-field label {
+      display: block;
+      color: var(--muted);
+      margin-bottom: 4px;
+      font-size: 0.78rem;
+    }
+
+    .exam-field input, .exam-field select {
+      width: 100%;
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 6px 8px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+
+    .exam-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      font-size: 0.84rem;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+
+    .exam-options label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .exam-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .exam-stats {
+      font-size: 0.85rem;
+      color: var(--exam);
       font-weight: 600;
     }
 
+    button.btn-exam {
+      background: var(--exam);
+      color: #0f172a;
+      border-color: var(--exam);
+    }
+
+    button.btn-exam:hover {
+      background: #d97706;
+      color: #fff;
+    }
+
+    /* Trình phát chính */
     .now-playing {
       background: #0f172a;
       border: 1px solid var(--border);
@@ -74,12 +214,28 @@
       margin-bottom: 20px;
     }
 
-    .track-title {
-      font-size: 1.1rem;
-      font-weight: 600;
+    .track-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
       margin-bottom: 12px;
+    }
+
+    .track-title {
+      font-size: 1.05rem;
+      font-weight: 600;
       color: #fff;
       word-break: break-word;
+    }
+
+    .unlimited-badge {
+      font-size: 0.75rem;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+      padding: 3px 8px;
+      border-radius: 6px;
+      white-space: nowrap;
     }
 
     .progress-container {
@@ -92,36 +248,50 @@
       cursor: pointer;
     }
 
+    input[type="range"]:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
     .time-row {
       display: flex;
       justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px;
       font-size: 0.82rem;
       color: var(--muted);
       margin-top: 6px;
+      font-variant-numeric: tabular-nums;
     }
 
     .controls {
       display: flex;
       justify-content: center;
       align-items: center;
-      gap: 12px;
-      margin-top: 10px;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
     }
 
     button {
       background: var(--card-hover);
       color: var(--text);
       border: 1px solid var(--border);
-      padding: 10px 16px;
+      padding: 10px 15px;
       border-radius: 10px;
-      font-size: 0.92rem;
+      font-size: 0.9rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.15s ease;
     }
 
-    button:hover {
+    button:hover:not(:disabled) {
       background: #475569;
+    }
+
+    button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
     }
 
     button.primary {
@@ -131,11 +301,12 @@
       padding: 10px 24px;
     }
 
-    button.primary:hover {
+    button.primary:hover:not(:disabled) {
       background: var(--accent-hover);
       color: #fff;
     }
 
+    /* Chỉnh tốc độ */
     .speed-box {
       background: #0f172a;
       border: 1px solid var(--border);
@@ -170,10 +341,10 @@
     }
 
     .preset-speeds button {
-      padding: 6px 12px;
-      font-size: 0.85rem;
+      padding: 6px 10px;
+      font-size: 0.84rem;
       flex: 1;
-      min-width: 58px;
+      min-width: 55px;
     }
 
     .preset-speeds button.active {
@@ -192,6 +363,7 @@
       cursor: pointer;
     }
 
+    /* Danh sách phát */
     .playlist-header {
       display: flex;
       justify-content: space-between;
@@ -257,20 +429,81 @@
       color: #f87171;
       display: none;
     }
+
+    .exam-notice {
+      margin-top: 10px;
+      font-size: 0.85rem;
+      color: var(--exam);
+      display: none;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <h1>Trình Phát Audio</h1>
-      <span class="badge" id="badgeSpeed">Mặc định: 0.60x</span>
+      <h1>Trình Đọc Audio</h1>
+      <div class="mode-switch">
+        <button id="normalModeBtn" class="active-normal">Chế độ Nghe</button>
+        <button id="examModeBtn">Chức năng Thi (0.6x)</button>
+      </div>
     </div>
 
+    <!-- CHỨC NĂNG THI -->
+    <div class="exam-panel" id="examPanel">
+      <div class="exam-header">
+        <span class="exam-title">CHẾ ĐỘ THI / LUYỆN NGHE</span>
+        <span class="exam-timer" id="examTimerDisplay">00:00</span>
+      </div>
+
+      <div class="exam-grid">
+        <div class="exam-field">
+          <label for="examSpeedInput">Tốc độ thi (mặc định 0.6x)</label>
+          <input type="number" id="examSpeedInput" value="0.6" min="0.25" max="2.5" step="0.05" />
+        </div>
+        <div class="exam-field">
+          <label for="examDurationInput">Thời gian làm bài (phút)</label>
+          <input type="number" id="examDurationInput" value="15" min="1" max="600" />
+        </div>
+        <div class="exam-field">
+          <label for="examMaxPlays">Số lần nghe tối đa</label>
+          <select id="examMaxPlays">
+            <option value="0">Không giới hạn</option>
+            <option value="1">1 lần</option>
+            <option value="2" selected>2 lần</option>
+            <option value="3">3 lần</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="exam-options">
+        <label>
+          <input type="checkbox" id="lockSeekCheck" checked />
+          Khóa thanh tua (chống tua nhanh/lùi)
+        </label>
+        <label>
+          <input type="checkbox" id="lockSpeedCheck" />
+          Cố định tốc độ thi (không cho đổi khi đang thi)
+        </label>
+      </div>
+
+      <div class="exam-actions">
+        <span class="exam-stats" id="examPlayCountDisplay">Đã nghe: 0 / 2 lần</span>
+        <div>
+          <button id="startExamBtn" class="btn-exam">▶ Bắt đầu Thi</button>
+          <button id="stopExamBtn" style="display:none;">⏹ Kết thúc</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRÌNH PHÁT CHÍNH -->
     <div class="now-playing">
-      <div class="track-title" id="trackTitle">Đang tải danh sách...</div>
+      <div class="track-meta">
+        <div class="track-title" id="trackTitle">Đang tải danh sách...</div>
+        <span class="unlimited-badge">Không giới hạn thời lượng</span>
+      </div>
 
       <div class="progress-container">
-        <input type="range" id="seekBar" value="0" min="0" max="100" step="0.1" />
+        <input type="range" id="seekBar" value="0" min="0" max="1000" step="1" />
         <div class="time-row">
           <span id="currentTime">00:00</span>
           <span id="realRemaining">Còn lại (thực tế): 00:00</span>
@@ -287,8 +520,10 @@
       </div>
 
       <div class="status-msg" id="errorMsg"></div>
+      <div class="exam-notice" id="examNotice"></div>
     </div>
 
+    <!-- TINH CHỈNH TỐC ĐỘ -->
     <div class="speed-box">
       <div class="speed-header">
         <span>Tốc độ đọc</span>
@@ -313,10 +548,11 @@
       </label>
     </div>
 
+    <!-- DANH SÁCH FILE AUDIO -->
     <div class="playlist-header">
       <h2>Danh sách file audio</h2>
       <label class="upload-btn">
-        + Thêm file từ máy
+        + Thêm file từ máy (mọi độ dài)
         <input type="file" id="fileInput" accept="audio/*" multiple hidden />
       </label>
     </div>
@@ -324,6 +560,7 @@
     <ul class="playlist" id="playlistEl"></ul>
   </div>
 
+  <!-- preload="none" / "metadata" giúp đọc trực tiếp file dài nhiều giờ mà không tràn bộ nhớ -->
   <audio id="audioPlayer" preload="metadata"></audio>
 
   <script>
@@ -335,11 +572,6 @@
         title: "Bản thu âm A (a.wav)",
         src: "./a.wav"
       }
-      // Nếu sau này up thêm file b.wav, hãy bỏ dấu // ở dưới để dùng:
-      // ,{
-      //   title: "Bản thu âm B (b.wav)",
-      //   src: "./b.wav"
-      // }
     ];
 
     const DEFAULT_SPEED = 0.6;
@@ -347,6 +579,14 @@
     let currentIndex = 0;
     let currentSpeed = DEFAULT_SPEED;
 
+    // Trạng thái Chức năng Thi
+    let isExamMode = false;
+    let isExamRunning = false;
+    let examInterval = null;
+    let examRemainingSeconds = 0;
+    let examPlaysUsed = 0;
+
+    // DOM Elements
     const audio = document.getElementById("audioPlayer");
     const trackTitle = document.getElementById("trackTitle");
     const seekBar = document.getElementById("seekBar");
@@ -354,31 +594,56 @@
     const durationEl = document.getElementById("duration");
     const realRemainingEl = document.getElementById("realRemaining");
     const playPauseBtn = document.getElementById("playPauseBtn");
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const rewindBtn = document.getElementById("rewindBtn");
+    const forwardBtn = document.getElementById("forwardBtn");
+
     const speedSlider = document.getElementById("speedSlider");
     const speedDisplay = document.getElementById("speedDisplay");
-    const badgeSpeed = document.getElementById("badgeSpeed");
     const presetButtons = document.querySelectorAll("#presetButtons button");
     const autoResetCheck = document.getElementById("autoResetCheck");
     const playlistEl = document.getElementById("playlistEl");
     const fileInput = document.getElementById("fileInput");
     const errorMsg = document.getElementById("errorMsg");
+    const examNotice = document.getElementById("examNotice");
 
+    // Exam Elements
+    const normalModeBtn = document.getElementById("normalModeBtn");
+    const examModeBtn = document.getElementById("examModeBtn");
+    const examPanel = document.getElementById("examPanel");
+    const examTimerDisplay = document.getElementById("examTimerDisplay");
+    const examSpeedInput = document.getElementById("examSpeedInput");
+    const examDurationInput = document.getElementById("examDurationInput");
+    const examMaxPlays = document.getElementById("examMaxPlays");
+    const lockSeekCheck = document.getElementById("lockSeekCheck");
+    const lockSpeedCheck = document.getElementById("lockSpeedCheck");
+    const examPlayCountDisplay = document.getElementById("examPlayCountDisplay");
+    const startExamBtn = document.getElementById("startExamBtn");
+    const stopExamBtn = document.getElementById("stopExamBtn");
+
+    // Định dạng thời gian hỗ trợ không giới hạn giờ (HH:MM:SS hoặc MM:SS)
     function formatTime(sec) {
       if (isNaN(sec) || !isFinite(sec) || sec < 0) return "00:00";
-      const m = Math.floor(sec / 60);
-      const s = Math.floor(sec % 60);
+      const totalSec = Math.floor(sec);
+      const h = Math.floor(totalSec / 3600);
+      const m = Math.floor((totalSec % 3600) / 60);
+      const s = totalSec % 60;
+      if (h > 0) {
+        return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+      }
       return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
     }
 
     function applySpeed(rate) {
-      currentSpeed = parseFloat(rate);
+      const parsed = Math.min(2.5, Math.max(0.25, parseFloat(rate) || DEFAULT_SPEED));
+      currentSpeed = parsed;
       audio.playbackRate = currentSpeed;
       audio.defaultPlaybackRate = currentSpeed;
       audio.preservesPitch = true;
 
       speedSlider.value = currentSpeed;
       speedDisplay.textContent = `${currentSpeed.toFixed(2)}x`;
-      badgeSpeed.textContent = `Tốc độ: ${currentSpeed.toFixed(2)}x`;
 
       presetButtons.forEach((btn) => {
         const btnSpeed = parseFloat(btn.dataset.speed);
@@ -392,13 +657,13 @@
       const cur = audio.currentTime || 0;
       const dur = audio.duration || 0;
       currentTimeEl.textContent = formatTime(cur);
-      durationEl.textContent = formatTime(dur);
+      durationEl.textContent = dur > 0 ? formatTime(dur) : "--:--";
 
       const remainingReal = dur > cur ? (dur - cur) / currentSpeed : 0;
       realRemainingEl.textContent = `Còn lại (thực tế): ${formatTime(remainingReal)}`;
 
-      if (dur > 0) {
-        seekBar.value = (cur / dur) * 100;
+      if (dur > 0 && isFinite(dur)) {
+        seekBar.value = Math.round((cur / dur) * 1000);
       } else {
         seekBar.value = 0;
       }
@@ -410,9 +675,24 @@
         const li = document.createElement("li");
         li.className = idx === currentIndex ? "active" : "";
         li.innerHTML = `<span>${idx + 1}. ${item.title}</span><span>${idx === currentIndex ? "🔊" : "▶"}</span>`;
-        li.onclick = () => loadTrack(idx, true);
+        li.onclick = () => {
+          if (isExamRunning) {
+            showExamNotice("Đang trong thời gian thi, không thể đổi sang file khác.");
+            return;
+          }
+          loadTrack(idx, true);
+        };
         playlistEl.appendChild(li);
       });
+    }
+
+    function showExamNotice(msg) {
+      examNotice.textContent = msg;
+      examNotice.style.display = "block";
+    }
+
+    function clearExamNotice() {
+      examNotice.style.display = "none";
     }
 
     function loadTrack(index, autoPlay = false) {
@@ -421,10 +701,13 @@
       const track = playlist[currentIndex];
 
       errorMsg.style.display = "none";
+      clearExamNotice();
       trackTitle.textContent = track.title;
       audio.src = track.src;
 
-      if (autoResetCheck.checked) {
+      if (isExamMode) {
+        applySpeed(examSpeedInput.value || DEFAULT_SPEED);
+      } else if (autoResetCheck.checked) {
         applySpeed(DEFAULT_SPEED);
       } else {
         applySpeed(currentSpeed);
@@ -441,7 +724,133 @@
       }
     }
 
-    // Sự kiện Audio
+    // ==========================
+    // LOGIC CHỨC NĂNG THI
+    // ==========================
+    function updateExamControlsState() {
+      const lockSeek = isExamRunning && lockSeekCheck.checked;
+      seekBar.disabled = lockSeek;
+      rewindBtn.disabled = lockSeek;
+      forwardBtn.disabled = lockSeek;
+      prevBtn.disabled = isExamRunning;
+      nextBtn.disabled = isExamRunning;
+
+      const lockSpeed = isExamRunning && lockSpeedCheck.checked;
+      speedSlider.disabled = lockSpeed;
+      presetButtons.forEach((b) => (b.disabled = lockSpeed));
+    }
+
+    function updateExamStatsUI() {
+      const maxPlays = parseInt(examMaxPlays.value, 10);
+      const maxText = maxPlays === 0 ? "Không giới hạn" : `${maxPlays} lần`;
+      examPlayCountDisplay.textContent = `Đã nghe: ${examPlaysUsed} / ${maxText}`;
+    }
+
+    function switchMode(exam) {
+      if (isExamRunning && !exam) {
+        stopExam("Đã thoát chế độ thi.");
+      }
+      isExamMode = exam;
+      normalModeBtn.className = exam ? "" : "active-normal";
+      examModeBtn.className = exam ? "active-exam" : "";
+      examPanel.classList.toggle("visible", exam);
+
+      if (exam) {
+        examSpeedInput.value = DEFAULT_SPEED;
+        applySpeed(DEFAULT_SPEED);
+        const mins = parseInt(examDurationInput.value, 10) || 15;
+        examTimerDisplay.textContent = formatTime(mins * 60);
+        examTimerDisplay.classList.remove("warning");
+        examPlaysUsed = 0;
+        updateExamStatsUI();
+      } else {
+        clearExamNotice();
+        updateExamControlsState();
+      }
+    }
+
+    function startExam() {
+      audio.pause();
+      audio.currentTime = 0;
+      clearExamNotice();
+
+      const examSpeed = parseFloat(examSpeedInput.value) || DEFAULT_SPEED;
+      applySpeed(examSpeed);
+
+      const mins = Math.max(1, parseInt(examDurationInput.value, 10) || 15);
+      examRemainingSeconds = mins * 60;
+      examPlaysUsed = 0;
+      isExamRunning = true;
+
+      startExamBtn.style.display = "none";
+      stopExamBtn.style.display = "inline-block";
+      examSpeedInput.disabled = true;
+      examDurationInput.disabled = true;
+      examMaxPlays.disabled = true;
+
+      updateExamStatsUI();
+      updateExamControlsState();
+      examTimerDisplay.textContent = formatTime(examRemainingSeconds);
+      examTimerDisplay.classList.remove("warning");
+
+      clearInterval(examInterval);
+      examInterval = setInterval(() => {
+        examRemainingSeconds--;
+        examTimerDisplay.textContent = formatTime(examRemainingSeconds);
+        if (examRemainingSeconds <= 60) {
+          examTimerDisplay.classList.add("warning");
+        }
+        if (examRemainingSeconds <= 0) {
+          stopExam("⏰ Hết thời gian làm bài thi!");
+        }
+      }, 1000);
+
+      // Bắt đầu phát lượt đầu tiên
+      examPlaysUsed = 1;
+      updateExamStatsUI();
+      audio.play().catch(() => {});
+    }
+
+    function stopExam(reason = "Đã kết thúc phần thi.") {
+      isExamRunning = false;
+      clearInterval(examInterval);
+      audio.pause();
+
+      startExamBtn.style.display = "inline-block";
+      stopExamBtn.style.display = "none";
+      examSpeedInput.disabled = false;
+      examDurationInput.disabled = false;
+      examMaxPlays.disabled = false;
+
+      updateExamControlsState();
+      showExamNotice(reason);
+    }
+
+    normalModeBtn.onclick = () => switchMode(false);
+    examModeBtn.onclick = () => switchMode(true);
+    startExamBtn.onclick = startExam;
+    stopExamBtn.onclick = () => stopExam("Đã dừng bài thi.");
+
+    examSpeedInput.onchange = () => {
+      if (isExamMode && !isExamRunning) {
+        applySpeed(examSpeedInput.value);
+      }
+    };
+
+    examDurationInput.onchange = () => {
+      if (isExamMode && !isExamRunning) {
+        const mins = Math.max(1, parseInt(examDurationInput.value, 10) || 15);
+        examTimerDisplay.textContent = formatTime(mins * 60);
+      }
+    };
+
+    examMaxPlays.onchange = updateExamStatsUI;
+    lockSeekCheck.onchange = updateExamControlsState;
+    lockSpeedCheck.onchange = updateExamControlsState;
+
+    // ==========================
+    // SỰ KIỆN AUDIO & ĐIỀU KHIỂN
+    // ==========================
     audio.addEventListener("loadedmetadata", () => {
       applySpeed(currentSpeed);
       updateTimeUI();
@@ -459,6 +868,17 @@
     });
 
     audio.addEventListener("ended", () => {
+      if (isExamRunning) {
+        const maxPlays = parseInt(examMaxPlays.value, 10);
+        if (maxPlays > 0 && examPlaysUsed >= maxPlays) {
+          showExamNotice(`Bạn đã dùng hết ${maxPlays} lượt nghe cho phép.`);
+          playPauseBtn.textContent = "▶ Hết lượt nghe";
+        } else {
+          playPauseBtn.textContent = "▶ Nghe lượt tiếp theo";
+        }
+        return;
+      }
+
       if (playlist.length > 1) {
         loadTrack(currentIndex + 1, true);
       } else {
@@ -471,27 +891,47 @@
       errorMsg.style.display = "block";
     });
 
-    // Điều khiển nút bấm
     playPauseBtn.onclick = () => {
       if (audio.paused) {
+        if (isExamRunning) {
+          const maxPlays = parseInt(examMaxPlays.value, 10);
+          // Nếu audio đã chạy xong hoặc ở đầu bài và chuẩn bị phát lượt mới
+          if (audio.ended || audio.currentTime === 0) {
+            if (examPlaysUsed > 0 && audio.ended) {
+              if (maxPlays > 0 && examPlaysUsed >= maxPlays) {
+                showExamNotice(`Đã hết ${maxPlays} lượt nghe tối đa.`);
+                return;
+              }
+              examPlaysUsed++;
+              updateExamStatsUI();
+            } else if (examPlaysUsed === 0) {
+              examPlaysUsed = 1;
+              updateExamStatsUI();
+            }
+          }
+        }
         audio.play();
       } else {
         audio.pause();
       }
     };
 
-    document.getElementById("prevBtn").onclick = () => loadTrack(currentIndex - 1, true);
-    document.getElementById("nextBtn").onclick = () => loadTrack(currentIndex + 1, true);
-    document.getElementById("rewindBtn").onclick = () => {
+    prevBtn.onclick = () => loadTrack(currentIndex - 1, true);
+    nextBtn.onclick = () => loadTrack(currentIndex + 1, true);
+    rewindBtn.onclick = () => {
       audio.currentTime = Math.max(0, audio.currentTime - 5);
     };
-    document.getElementById("forwardBtn").onclick = () => {
-      audio.currentTime = Math.min(audio.duration || 0, audio.currentTime + 5);
+    forwardBtn.onclick = () => {
+      if (isFinite(audio.duration)) {
+        audio.currentTime = Math.min(audio.duration, audio.currentTime + 5);
+      } else {
+        audio.currentTime += 5;
+      }
     };
 
     seekBar.oninput = () => {
-      if (audio.duration) {
-        audio.currentTime = (seekBar.value / 100) * audio.duration;
+      if (audio.duration && isFinite(audio.duration)) {
+        audio.currentTime = (seekBar.value / 1000) * audio.duration;
       }
     };
 
@@ -511,7 +951,7 @@
           src: URL.createObjectURL(file)
         });
       });
-      loadTrack(startIdx, true);
+      loadTrack(startIdx, !isExamRunning);
     };
 
     // Khởi chạy ban đầu
