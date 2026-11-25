@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trình Đọc Audio (Mặc định 0.6x)</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --card-hover: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-hover: #0284c7;
+      --border: #334155;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 680px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+      height: fit-content;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    .badge {
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .now-playing {
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 20px;
+    }
+
+    .track-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #fff;
+      word-break: break-word;
+    }
+
+    .progress-container {
+      margin-bottom: 14px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .time-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    button {
+      background: var(--card-hover);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    button:hover {
+      background: #475569;
+    }
+
+    button.primary {
+      background: var(--accent);
+      color: #0f172a;
+      border-color: var(--accent);
+      padding: 10px 24px;
+    }
+
+    button.primary:hover {
+      background: var(--accent-hover);
+      color: #fff;
+    }
+
+    .speed-box {
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+
+    .speed-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .speed-header span {
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+
+    .speed-value {
+      color: var(--accent);
+      font-size: 1.05rem;
+      font-weight: 700;
+    }
+
+    .preset-speeds {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .preset-speeds button {
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      flex: 1;
+      min-width: 58px;
+    }
+
+    .preset-speeds button.active {
+      background: var(--accent);
+      color: #0f172a;
+      border-color: var(--accent);
+    }
+
+    .auto-reset {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+      font-size: 0.85rem;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .playlist-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .playlist-header h2 {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .upload-btn {
+      font-size: 0.85rem;
+      padding: 6px 12px;
+      background: transparent;
+      border: 1px dashed var(--accent);
+      color: var(--accent);
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .upload-btn:hover {
+      background: rgba(56, 189, 248, 0.1);
+    }
+
+    .playlist {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 280px;
+      overflow-y: auto;
+    }
+
+    .playlist li {
+      padding: 12px 14px;
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.92rem;
+      transition: 0.15s;
+    }
+
+    .playlist li:hover {
+      border-color: var(--accent);
+    }
+
+    .playlist li.active {
+      border-color: var(--accent);
+      background: rgba(56, 189, 248, 0.12);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .status-msg {
+      margin-top: 10px;
+      font-size: 0.85rem;
+      color: #f87171;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Trình Phát Audio</h1>
+      <span class="badge" id="badgeSpeed">Mặc định: 0.60x</span>
+    </div>
+
+    <div class="now-playing">
+      <div class="track-title" id="trackTitle">Đang tải danh sách...</div>
+
+      <div class="progress-container">
+        <input type="range" id="seekBar" value="0" min="0" max="100" step="0.1" />
+        <div class="time-row">
+          <span id="currentTime">00:00</span>
+          <span id="realRemaining">Còn lại (thực tế): 00:00</span>
+          <span id="duration">00:00</span>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button id="prevBtn" title="Bài trước">⏮ Trước</button>
+        <button id="rewindBtn" title="Lùi 5 giây">-5s</button>
+        <button id="playPauseBtn" class="primary">▶ Phát</button>
+        <button id="forwardBtn" title="Tiến 5 giây">+5s</button>
+        <button id="nextBtn" title="Bài tiếp theo">Tiếp ⏭</button>
+      </div>
+
+      <div class="status-msg" id="errorMsg"></div>
+    </div>
+
+    <div class="speed-box">
+      <div class="speed-header">
+        <span>Tốc độ đọc</span>
+        <span class="speed-value" id="speedDisplay">0.60x</span>
+      </div>
+
+      <input type="range" id="speedSlider" min="0.25" max="2.5" step="0.05" value="0.6" />
+
+      <div class="preset-speeds" id="presetButtons">
+        <button data-speed="0.5">0.5x</button>
+        <button data-speed="0.6" class="active">0.6x</button>
+        <button data-speed="0.75">0.75x</button>
+        <button data-speed="1">1.0x</button>
+        <button data-speed="1.25">1.25x</button>
+        <button data-speed="1.5">1.5x</button>
+        <button data-speed="2">2.0x</button>
+      </div>
+
+      <label class="auto-reset">
+        <input type="checkbox" id="autoResetCheck" checked />
+        Tự động đặt lại về 0.6x khi chuyển sang file mới
+      </label>
+    </div>
+
+    <div class="playlist-header">
+      <h2>Danh sách file audio</h2>
+      <label class="upload-btn">
+        + Thêm file từ máy
+        <input type="file" id="fileInput" accept="audio/*" multiple hidden />
+      </label>
+    </div>
+
+    <ul class="playlist" id="playlistEl"></ul>
+  </div>
+
+  <audio id="audioPlayer" preload="metadata"></audio>
+
+  <script>
+    // ==========================================
+    // DANH SÁCH FILE AUDIO CÓ SẴN TRÊN GITHUB
+    // ==========================================
+    const PRESET_PLAYLIST = [
+      {
+        title: "Bản thu âm A (a.wav)",
+        src: "./a.wav"
+      }
+      // Nếu sau này up thêm file b.wav, hãy bỏ dấu // ở dưới để dùng:
+      // ,{
+      //   title: "Bản thu âm B (b.wav)",
+      //   src: "./b.wav"
+      // }
+    ];
+
+    const DEFAULT_SPEED = 0.6;
+    let playlist = [...PRESET_PLAYLIST];
+    let currentIndex = 0;
+    let currentSpeed = DEFAULT_SPEED;
+
+    const audio = document.getElementById("audioPlayer");
+    const trackTitle = document.getElementById("trackTitle");
+    const seekBar = document.getElementById("seekBar");
+    const currentTimeEl = document.getElementById("currentTime");
+    const durationEl = document.getElementById("duration");
+    const realRemainingEl = document.getElementById("realRemaining");
+    const playPauseBtn = document.getElementById("playPauseBtn");
+    const speedSlider = document.getElementById("speedSlider");
+    const speedDisplay = document.getElementById("speedDisplay");
+    const badgeSpeed = document.getElementById("badgeSpeed");
+    const presetButtons = document.querySelectorAll("#presetButtons button");
+    const autoResetCheck = document.getElementById("autoResetCheck");
+    const playlistEl = document.getElementById("playlistEl");
+    const fileInput = document.getElementById("fileInput");
+    const errorMsg = document.getElementById("errorMsg");
+
+    function formatTime(sec) {
+      if (isNaN(sec) || !isFinite(sec) || sec < 0) return "00:00";
+      const m = Math.floor(sec / 60);
+      const s = Math.floor(sec % 60);
+      return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+    }
+
+    function applySpeed(rate) {
+      currentSpeed = parseFloat(rate);
+      audio.playbackRate = currentSpeed;
+      audio.defaultPlaybackRate = currentSpeed;
+      audio.preservesPitch = true;
+
+      speedSlider.value = currentSpeed;
+      speedDisplay.textContent = `${currentSpeed.toFixed(2)}x`;
+      badgeSpeed.textContent = `Tốc độ: ${currentSpeed.toFixed(2)}x`;
+
+      presetButtons.forEach((btn) => {
+        const btnSpeed = parseFloat(btn.dataset.speed);
+        btn.classList.toggle("active", Math.abs(btnSpeed - currentSpeed) < 0.01);
+      });
+
+      updateTimeUI();
+    }
+
+    function updateTimeUI() {
+      const cur = audio.currentTime || 0;
+      const dur = audio.duration || 0;
+      currentTimeEl.textContent = formatTime(cur);
+      durationEl.textContent = formatTime(dur);
+
+      const remainingReal = dur > cur ? (dur - cur) / currentSpeed : 0;
+      realRemainingEl.textContent = `Còn lại (thực tế): ${formatTime(remainingReal)}`;
+
+      if (dur > 0) {
+        seekBar.value = (cur / dur) * 100;
+      } else {
+        seekBar.value = 0;
+      }
+    }
+
+    function renderPlaylist() {
+      playlistEl.innerHTML = "";
+      playlist.forEach((item, idx) => {
+        const li = document.createElement("li");
+        li.className = idx === currentIndex ? "active" : "";
+        li.innerHTML = `<span>${idx + 1}. ${item.title}</span><span>${idx === currentIndex ? "🔊" : "▶"}</span>`;
+        li.onclick = () => loadTrack(idx, true);
+        playlistEl.appendChild(li);
+      });
+    }
+
+    function loadTrack(index, autoPlay = false) {
+      if (playlist.length === 0) return;
+      currentIndex = (index + playlist.length) % playlist.length;
+      const track = playlist[currentIndex];
+
+      errorMsg.style.display = "none";
+      trackTitle.textContent = track.title;
+      audio.src = track.src;
+
+      if (autoResetCheck.checked) {
+        applySpeed(DEFAULT_SPEED);
+      } else {
+        applySpeed(currentSpeed);
+      }
+
+      renderPlaylist();
+
+      if (autoPlay) {
+        audio.play().catch(() => {
+          playPauseBtn.textContent = "▶ Phát";
+        });
+      } else {
+        playPauseBtn.textContent = "▶ Phát";
+      }
+    }
+
+    // Sự kiện Audio
+    audio.addEventListener("loadedmetadata", () => {
+      applySpeed(currentSpeed);
+      updateTimeUI();
+    });
+
+    audio.addEventListener("timeupdate", updateTimeUI);
+
+    audio.addEventListener("play", () => {
+      applySpeed(currentSpeed);
+      playPauseBtn.textContent = "⏸ Tạm dừng";
+    });
+
+    audio.addEventListener("pause", () => {
+      playPauseBtn.textContent = "▶ Phát";
+    });
+
+    audio.addEventListener("ended", () => {
+      if (playlist.length > 1) {
+        loadTrack(currentIndex + 1, true);
+      } else {
+        playPauseBtn.textContent = "▶ Phát lại";
+      }
+    });
+
+    audio.addEventListener("error", () => {
+      errorMsg.textContent = `Không thể tải file "${playlist[currentIndex]?.src}". Hãy kiểm tra lại tên file hoặc chờ GitHub Pages cập nhật.`;
+      errorMsg.style.display = "block";
+    });
+
+    // Điều khiển nút bấm
+    playPauseBtn.onclick = () => {
+      if (audio.paused) {
+        audio.play();
+      } else {
+        audio.pause();
+      }
+    };
+
+    document.getElementById("prevBtn").onclick = () => loadTrack(currentIndex - 1, true);
+    document.getElementById("nextBtn").onclick = () => loadTrack(currentIndex + 1, true);
+    document.getElementById("rewindBtn").onclick = () => {
+      audio.currentTime = Math.max(0, audio.currentTime - 5);
+    };
+    document.getElementById("forwardBtn").onclick = () => {
+      audio.currentTime = Math.min(audio.duration || 0, audio.currentTime + 5);
+    };
+
+    seekBar.oninput = () => {
+      if (audio.duration) {
+        audio.currentTime = (seekBar.value / 100) * audio.duration;
+      }
+    };
+
+    speedSlider.oninput = () => applySpeed(speedSlider.value);
+
+    presetButtons.forEach((btn) => {
+      btn.onclick = () => applySpeed(btn.dataset.speed);
+    });
+
+    fileInput.onchange = (e) => {
+      const files = Array.from(e.target.files);
+      if (!files.length) return;
+      const startIdx = playlist.length;
+      files.forEach((file) => {
+        playlist.push({
+          title: file.name,
+          src: URL.createObjectURL(file)
+        });
+      });
+      loadTrack(startIdx, true);
+    };
+
+    // Khởi chạy ban đầu
+    applySpeed(DEFAULT_SPEED);
+    loadTrack(0, false);
+  </script>
+</body>
+</html>
