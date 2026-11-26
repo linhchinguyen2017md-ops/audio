@@ -32,16 +32,16 @@
       min-height: 100vh;
       display: flex;
       justify-content: center;
-      padding: 24px 16px;
+      padding: 18px 14px 40px;
     }
 
     .container {
       width: 100%;
-      max-width: 720px;
+      max-width: 760px;
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 16px;
-      padding: 24px;
+      padding: 20px;
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
       height: fit-content;
     }
@@ -52,13 +52,13 @@
       align-items: center;
       flex-wrap: wrap;
       gap: 10px;
-      margin-bottom: 20px;
-      padding-bottom: 16px;
+      margin-bottom: 16px;
+      padding-bottom: 14px;
       border-bottom: 1px solid var(--border);
     }
 
     .header h1 {
-      font-size: 1.25rem;
+      font-size: 1.2rem;
       font-weight: 700;
     }
 
@@ -95,8 +95,8 @@
       background: var(--exam-bg);
       border: 1px solid var(--exam);
       border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 20px;
+      padding: 14px;
+      margin-bottom: 16px;
     }
 
     .exam-panel.visible {
@@ -107,18 +107,18 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
     .exam-title {
       color: var(--exam);
       font-weight: 700;
-      font-size: 1rem;
+      font-size: 0.95rem;
     }
 
     .exam-timer {
       font-family: monospace;
-      font-size: 1.2rem;
+      font-size: 1.15rem;
       font-weight: 700;
       background: #0f172a;
       color: var(--exam);
@@ -136,15 +136,15 @@
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
       gap: 10px;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
     .exam-field {
       background: #0f172a;
-      padding: 10px;
+      padding: 9px;
       border-radius: 8px;
       border: 1px solid var(--border);
-      font-size: 0.85rem;
+      font-size: 0.84rem;
     }
 
     .exam-field label {
@@ -161,16 +161,16 @@
       border: 1px solid var(--border);
       padding: 6px 8px;
       border-radius: 6px;
-      font-size: 0.9rem;
+      font-size: 0.88rem;
     }
 
     .exam-options {
       display: flex;
       flex-wrap: wrap;
       gap: 14px;
-      font-size: 0.84rem;
+      font-size: 0.83rem;
       color: var(--text);
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
     .exam-options label {
@@ -205,13 +205,17 @@
       color: #fff;
     }
 
-    /* Trình phát chính */
+    /* Trình phát chính - Ghim khi cuộn */
     .now-playing {
+      position: sticky;
+      top: 10px;
+      z-index: 20;
       background: #0f172a;
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 18px;
-      margin-bottom: 20px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45);
     }
 
     .track-meta {
@@ -219,18 +223,18 @@
       justify-content: space-between;
       align-items: center;
       gap: 10px;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
     .track-title {
-      font-size: 1.05rem;
+      font-size: 1rem;
       font-weight: 600;
       color: #fff;
       word-break: break-word;
     }
 
     .unlimited-badge {
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       background: rgba(56, 189, 248, 0.15);
       color: var(--accent);
       padding: 3px 8px;
@@ -239,7 +243,7 @@
     }
 
     .progress-container {
-      margin-bottom: 14px;
+      margin-bottom: 10px;
     }
 
     input[type="range"] {
@@ -258,9 +262,9 @@
       justify-content: space-between;
       flex-wrap: wrap;
       gap: 6px;
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       color: var(--muted);
-      margin-top: 6px;
+      margin-top: 4px;
       font-variant-numeric: tabular-nums;
     }
 
@@ -269,17 +273,17 @@
       justify-content: center;
       align-items: center;
       flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 12px;
+      gap: 8px;
+      margin-top: 10px;
     }
 
     button {
       background: var(--card-hover);
       color: var(--text);
       border: 1px solid var(--border);
-      padding: 10px 15px;
+      padding: 8px 14px;
       border-radius: 10px;
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.15s ease;
@@ -298,7 +302,7 @@
       background: var(--accent);
       color: #0f172a;
       border-color: var(--accent);
-      padding: 10px 24px;
+      padding: 8px 22px;
     }
 
     button.primary:hover:not(:disabled) {
@@ -311,40 +315,40 @@
       background: #0f172a;
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 20px;
+      padding: 14px 16px;
+      margin-bottom: 18px;
     }
 
     .speed-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
     }
 
     .speed-header span {
-      font-size: 0.92rem;
+      font-size: 0.9rem;
       font-weight: 600;
     }
 
     .speed-value {
       color: var(--accent);
-      font-size: 1.05rem;
+      font-size: 1rem;
       font-weight: 700;
     }
 
     .preset-speeds {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 12px;
+      gap: 6px;
+      margin-top: 10px;
     }
 
     .preset-speeds button {
-      padding: 6px 10px;
-      font-size: 0.84rem;
+      padding: 6px 8px;
+      font-size: 0.82rem;
       flex: 1;
-      min-width: 55px;
+      min-width: 52px;
     }
 
     .preset-speeds button.active {
@@ -357,13 +361,13 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-top: 12px;
-      font-size: 0.85rem;
+      margin-top: 10px;
+      font-size: 0.83rem;
       color: var(--muted);
       cursor: pointer;
     }
 
-    /* Danh sách phát theo thư mục */
+    /* Danh sách phát theo thư mục - Hiển thị đầy đủ, không cắt */
     .playlist-header {
       display: flex;
       justify-content: space-between;
@@ -379,7 +383,7 @@
     }
 
     .upload-btn {
-      font-size: 0.85rem;
+      font-size: 0.83rem;
       padding: 6px 12px;
       background: transparent;
       border: 1px dashed var(--accent);
@@ -395,13 +399,11 @@
     .folder-list {
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      max-height: 420px;
-      overflow-y: auto;
-      padding-right: 4px;
+      gap: 10px;
     }
 
     .folder-group {
+      flex-shrink: 0;
       background: #0f172a;
       border: 1px solid var(--border);
       border-radius: 12px;
@@ -422,7 +424,7 @@
     }
 
     .folder-header:hover {
-      background: rgba(51, 65, 85, 0.7);
+      background: rgba(51, 65, 85, 0.75);
     }
 
     .folder-meta {
@@ -456,6 +458,7 @@
       align-items: center;
       gap: 10px;
       font-size: 0.9rem;
+      line-height: 1.35;
       transition: 0.15s;
     }
 
@@ -471,15 +474,15 @@
     }
 
     .status-msg {
-      margin-top: 10px;
-      font-size: 0.85rem;
+      margin-top: 8px;
+      font-size: 0.84rem;
       color: #f87171;
       display: none;
     }
 
     .exam-notice {
-      margin-top: 10px;
-      font-size: 0.85rem;
+      margin-top: 8px;
+      font-size: 0.84rem;
       color: var(--exam);
       display: none;
     }
@@ -722,7 +725,7 @@
     let playlist = [...PRESET_PLAYLIST];
     let currentIndex = 0;
     let currentSpeed = DEFAULT_SPEED;
-    const collapsedFolders = new Set(["Đề 2 Máy trưởng", "Đề 3 Máy trưởng", "Tài liệu chung"]);
+    let openFolder = "Đề 1 Máy trưởng";
 
     // Trạng thái Chức năng Thi
     let isExamMode = false;
@@ -825,7 +828,7 @@
 
       groups.forEach((items, folderName) => {
         const groupDiv = document.createElement("div");
-        const isCollapsed = collapsedFolders.has(folderName);
+        const isCollapsed = openFolder !== folderName;
         groupDiv.className = `folder-group${isCollapsed ? " collapsed" : ""}`;
 
         const headerDiv = document.createElement("div");
@@ -835,11 +838,7 @@
           <span class="folder-meta">${items.length} file <span>${isCollapsed ? "▸" : "▾"}</span></span>
         `;
         headerDiv.onclick = () => {
-          if (collapsedFolders.has(folderName)) {
-            collapsedFolders.delete(folderName);
-          } else {
-            collapsedFolders.add(folderName);
-          }
+          openFolder = openFolder === folderName ? null : folderName;
           renderPlaylist();
         };
 
@@ -886,7 +885,7 @@
       audio.src = track.src.startsWith("blob:") ? track.src : encodeURI(track.src);
 
       if (track.folder) {
-        collapsedFolders.delete(track.folder);
+        openFolder = track.folder;
       }
 
       if (isExamMode) {
