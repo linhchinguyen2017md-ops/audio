@@ -363,12 +363,14 @@
       cursor: pointer;
     }
 
-    /* Danh sách phát */
+    /* Danh sách phát theo thư mục */
     .playlist-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 12px;
+      gap: 10px;
+      flex-wrap: wrap;
     }
 
     .playlist-header h2 {
@@ -390,35 +392,80 @@
       background: rgba(56, 189, 248, 0.1);
     }
 
-    .playlist {
+    .folder-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 380px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .folder-group {
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .folder-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 14px;
+      background: rgba(51, 65, 85, 0.45);
+      cursor: pointer;
+      user-select: none;
+      font-weight: 600;
+      font-size: 0.94rem;
+      color: #fff;
+    }
+
+    .folder-header:hover {
+      background: rgba(51, 65, 85, 0.7);
+    }
+
+    .folder-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .folder-items {
       list-style: none;
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      max-height: 280px;
-      overflow-y: auto;
+      gap: 6px;
+      padding: 10px;
     }
 
-    .playlist li {
-      padding: 12px 14px;
-      background: #0f172a;
+    .folder-group.collapsed .folder-items {
+      display: none;
+    }
+
+    .folder-items li {
+      padding: 10px 12px;
+      background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: 8px;
       cursor: pointer;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 0.92rem;
+      gap: 10px;
+      font-size: 0.9rem;
       transition: 0.15s;
     }
 
-    .playlist li:hover {
+    .folder-items li:hover {
       border-color: var(--accent);
     }
 
-    .playlist li.active {
+    .folder-items li.active {
       border-color: var(--accent);
-      background: rgba(56, 189, 248, 0.12);
+      background: rgba(56, 189, 248, 0.14);
       color: var(--accent);
       font-weight: 600;
     }
@@ -548,27 +595,59 @@
       </label>
     </div>
 
-    <!-- DANH SÁCH FILE AUDIO -->
+    <!-- DANH SÁCH FILE AUDIO THEO THƯ MỤC -->
     <div class="playlist-header">
-      <h2>Danh sách file audio</h2>
+      <h2>Danh sách thư mục audio</h2>
       <label class="upload-btn">
         + Thêm file từ máy (mọi độ dài)
         <input type="file" id="fileInput" accept="audio/*" multiple hidden />
       </label>
     </div>
 
-    <ul class="playlist" id="playlistEl"></ul>
+    <div class="folder-list" id="playlistEl"></div>
   </div>
 
-  <!-- preload="none" / "metadata" giúp đọc trực tiếp file dài nhiều giờ mà không tràn bộ nhớ -->
   <audio id="audioPlayer" preload="metadata"></audio>
 
   <script>
     // ==========================================
-    // DANH SÁCH FILE AUDIO CÓ SẴN TRÊN GITHUB
+    // DANH SÁCH FILE AUDIO PHÂN THEO THƯ MỤC
     // ==========================================
     const PRESET_PLAYLIST = [
+      // Thư mục: Đề 1 Máy trưởng
       {
+        folder: "Đề 1 Máy trưởng",
+        title: "Khởi động Tuabin - Đoạn 1",
+        src: "./khởi động Tuabin đoạn 1.wav"
+      },
+      {
+        folder: "Đề 1 Máy trưởng",
+        title: "Khởi động Tuabin - Đoạn 2",
+        src: "./khởi động tuabin đoạn 2.wav"
+      },
+      {
+        folder: "Đề 1 Máy trưởng",
+        title: "Khởi động Tuabin - Đoạn 3",
+        src: "./khởi động tuabin đoạn 3.wav"
+      },
+      {
+        folder: "Đề 1 Máy trưởng",
+        title: "Trách nhiệm của người cho phép và người chỉ huy trực tiếp trong PCT",
+        src: "./trách nhiệm của người cho phép và người chỉ huy trực tiếp trong PCT.wav"
+      },
+      {
+        folder: "Đề 1 Máy trưởng",
+        title: "Chênh áp dầu chèn – Hydro dao động",
+        src: "./chênh áp dầu chèn – Hydro dao động.wav"
+      },
+      {
+        folder: "Đề 1 Máy trưởng",
+        title: "Ảnh hưởng của áp lực, nhiệt độ",
+        src: "./ảnh hưởng của áp lực, nhiệt độ .wav"
+      },
+      // Thư mục chung
+      {
+        folder: "Tài liệu chung",
         title: "Bản thu âm A (a.wav)",
         src: "./a.wav"
       }
@@ -578,6 +657,7 @@
     let playlist = [...PRESET_PLAYLIST];
     let currentIndex = 0;
     let currentSpeed = DEFAULT_SPEED;
+    const collapsedFolders = new Set(["Tài liệu chung"]);
 
     // Trạng thái Chức năng Thi
     let isExamMode = false;
@@ -622,7 +702,6 @@
     const startExamBtn = document.getElementById("startExamBtn");
     const stopExamBtn = document.getElementById("stopExamBtn");
 
-    // Định dạng thời gian hỗ trợ không giới hạn giờ (HH:MM:SS hoặc MM:SS)
     function formatTime(sec) {
       if (isNaN(sec) || !isFinite(sec) || sec < 0) return "00:00";
       const totalSec = Math.floor(sec);
@@ -671,18 +750,54 @@
 
     function renderPlaylist() {
       playlistEl.innerHTML = "";
+      const groups = new Map();
+
       playlist.forEach((item, idx) => {
-        const li = document.createElement("li");
-        li.className = idx === currentIndex ? "active" : "";
-        li.innerHTML = `<span>${idx + 1}. ${item.title}</span><span>${idx === currentIndex ? "🔊" : "▶"}</span>`;
-        li.onclick = () => {
-          if (isExamRunning) {
-            showExamNotice("Đang trong thời gian thi, không thể đổi sang file khác.");
-            return;
+        const folderName = item.folder || "Tài liệu chung";
+        if (!groups.has(folderName)) groups.set(folderName, []);
+        groups.get(folderName).push({ ...item, index: idx });
+      });
+
+      groups.forEach((items, folderName) => {
+        const groupDiv = document.createElement("div");
+        const isCollapsed = collapsedFolders.has(folderName);
+        groupDiv.className = `folder-group${isCollapsed ? " collapsed" : ""}`;
+
+        const headerDiv = document.createElement("div");
+        headerDiv.className = "folder-header";
+        headerDiv.innerHTML = `
+          <span>📁 ${folderName}</span>
+          <span class="folder-meta">${items.length} file <span>${isCollapsed ? "▸" : "▾"}</span></span>
+        `;
+        headerDiv.onclick = () => {
+          if (collapsedFolders.has(folderName)) {
+            collapsedFolders.delete(folderName);
+          } else {
+            collapsedFolders.add(folderName);
           }
-          loadTrack(idx, true);
+          renderPlaylist();
         };
-        playlistEl.appendChild(li);
+
+        const ul = document.createElement("ul");
+        ul.className = "folder-items";
+
+        items.forEach((item, localIdx) => {
+          const li = document.createElement("li");
+          li.className = item.index === currentIndex ? "active" : "";
+          li.innerHTML = `<span>${localIdx + 1}. ${item.title}</span><span>${item.index === currentIndex ? "🔊" : "▶"}</span>`;
+          li.onclick = () => {
+            if (isExamRunning) {
+              showExamNotice("Đang trong thời gian thi, không thể đổi sang file khác.");
+              return;
+            }
+            loadTrack(item.index, true);
+          };
+          ul.appendChild(li);
+        });
+
+        groupDiv.appendChild(headerDiv);
+        groupDiv.appendChild(ul);
+        playlistEl.appendChild(groupDiv);
       });
     }
 
@@ -702,8 +817,12 @@
 
       errorMsg.style.display = "none";
       clearExamNotice();
-      trackTitle.textContent = track.title;
-      audio.src = track.src;
+      trackTitle.textContent = `[${track.folder || "Chung"}] ${track.title}`;
+      audio.src = track.src.startsWith("blob:") ? track.src : encodeURI(track.src);
+
+      if (track.folder) {
+        collapsedFolders.delete(track.folder);
+      }
 
       if (isExamMode) {
         applySpeed(examSpeedInput.value || DEFAULT_SPEED);
@@ -805,7 +924,6 @@
         }
       }, 1000);
 
-      // Bắt đầu phát lượt đầu tiên
       examPlaysUsed = 1;
       updateExamStatsUI();
       audio.play().catch(() => {});
@@ -895,7 +1013,6 @@
       if (audio.paused) {
         if (isExamRunning) {
           const maxPlays = parseInt(examMaxPlays.value, 10);
-          // Nếu audio đã chạy xong hoặc ở đầu bài và chuẩn bị phát lượt mới
           if (audio.ended || audio.currentTime === 0) {
             if (examPlaysUsed > 0 && audio.ended) {
               if (maxPlays > 0 && examPlaysUsed >= maxPlays) {
@@ -947,6 +1064,7 @@
       const startIdx = playlist.length;
       files.forEach((file) => {
         playlist.push({
+          folder: "File tải từ máy",
           title: file.name,
           src: URL.createObjectURL(file)
         });
